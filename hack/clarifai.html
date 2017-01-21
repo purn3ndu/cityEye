@@ -1,0 +1,63 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://sdk.clarifai.com/js/clarifai-2.0.9.js"></script>
+
+<h2>Input</h2>  
+<form class="input-group" id="img2b64">
+    <input id="inputFileToLoad" type="file" onchange="encodeImageFileAsURL();" />
+</form>
+            
+<hr>
+
+<h2>Output</h2>        
+<div class="output">
+    <textarea class="form-control" rows=30 cols=100></textarea><br>
+    <a></a><br><br>
+    <img><br>
+</div>
+
+
+<script>
+  var app = new Clarifai.App(
+        'OTGj6hMz_MJdIFld4q91EmNMuxqR_ttUq7FF83YI',
+        '_yIdO28TNqonDVoz6jDJFcbrTQA9bSm-hSDbJNR_'
+      );
+
+function encodeImageFileAsURL(cb) {
+    return function(){
+        var file = this.files[0];
+        var reader  = new FileReader();
+        reader.onloadend = function () {
+        	// predict the contents of an image by passing in image url or base64 string.
+			app.models.predict(Clarifai.GENERAL_MODEL, reader.result.split(",")[1]).then(
+			  function(response) {
+			    var matches = "";
+			    if(response.data.status.code == 10000){
+			    	response.data.outputs[0].data.concepts.forEach(function(concept) {
+				    	matches += concept.name + " : " + concept.value + "\n";
+				    });
+				    cb(matches);
+			    }
+			  },
+			  function(err) {
+			    console.error(err);
+			  }
+			);
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+$('#inputFileToLoad').change(encodeImageFileAsURL(function(base64Img){
+    $('.output')
+      .find('textarea')
+        .val(base64Img)
+        .end();
+      /*.find('a')
+        .attr('href', base64Img)
+        .text(base64Img)
+        .end()
+      .find('img')
+        .attr('src', base64Img);*/
+}));
+
+</script>
